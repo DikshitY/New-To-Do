@@ -1,35 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react';
+import ToDoList from './components/ToDoList';
+import { v4 as uuidv4 } from 'uuid';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [toDoItems, setToDoItems] = useState([]);
+  const [newToDo, setNewToDo] = useState('');
+  const [isEdit, setIsEdit] = useState(false);
+  const [editId, setEditId] = useState(null);
+
+  const addToDo = () => {
+    if (newToDo.trim() === '') {
+      alert('Please enter a task before adding/updating!');
+      return;
+    }
+
+    const updatedItems = isEdit
+      ? toDoItems.map((item) => (item.id === editId ? { ...item, name: newToDo } : item))
+      : [...toDoItems, { id: uuidv4(), name: newToDo, checked: false }];
+
+    setToDoItems(updatedItems);
+    localStorage.setItem('toDoList', JSON.stringify(updatedItems));
+    setNewToDo('');
+    setIsEdit(false);
+  };
+
+  useEffect(() => {
+    const storedItems = localStorage.getItem('toDoList');
+    if (storedItems) setToDoItems(JSON.parse(storedItems));
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+    <div className="app-container">
+      <h1>To-Do List</h1>
+      <div className="input-container">
+        <input
+          type="text"
+          value={newToDo}
+          onChange={(e) => setNewToDo(e.target.value)}
+          onKeyDown={(e) => (e.key === 'Enter' ? addToDo() : null)}
+          placeholder="Enter your task..."
+        />
+        <button className="add-task-btn" onClick={addToDo}>
+          {isEdit ? 'Update Task' : 'Add Task'}
         </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      <ToDoList
+        toDoList={toDoItems}
+        setToDoItems={setToDoItems}
+        setNewToDo={setNewToDo}
+        setIsEdit={setIsEdit}
+        setEditId={setEditId}
+      />
+    </div>
+  );
 }
 
-export default App
+export default App;
